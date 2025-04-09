@@ -96,7 +96,6 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
             break;
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGI("httpc", "HTTP_EVENT_DISCONNECTED");
-                   int mbedtls_err = 0;
             if (output_buffer != NULL) {
                 free(output_buffer);
                 output_buffer = NULL;
@@ -128,8 +127,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32 "", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
@@ -209,7 +206,6 @@ void app_main(void)
             example_disconnect();
         }
         else {
-            copy_to_s(local_response_buffer);
             char artist[200] = {0};
             char title[200] = {0};
             char art_url[200] = {0};
@@ -232,7 +228,7 @@ void app_main(void)
             ESP_LOGW("main", "EPD Init done.");
           //  EPD_13IN3E_Clear(EPD_13IN3E_RED);
         //    EPD_13IN3E_Clear(EPD_13IN3E_BLUE);
-            EPD_13IN3E_Display_Buffers();
+            EPD_13IN3E_Display2((UBYTE *)local_response_buffer, (UBYTE *)local_response_buffer+(EPD_13IN3E_BUF_WIDTH));
             EPD_13IN3E_Sleep();
             power_off();
         }

@@ -457,7 +457,7 @@ void EPD_13IN3E_Display2(const UBYTE *Image1, const UBYTE *Image2)
     EPD_13IN3E_SendCommand(0x10);
     for(UDOUBLE i=0; i<Height; i++ )
     {
-        EPD_13IN3E_SendData2(Image1 + i*Width,Width1);
+        EPD_13IN3E_SendData2(Image1 + i*Width1,Width1);
         DEV_Delay_ms(1);
     }
     EPD_13IN3E_CS_ALL(1);
@@ -466,7 +466,7 @@ void EPD_13IN3E_Display2(const UBYTE *Image1, const UBYTE *Image2)
     EPD_13IN3E_SendCommand(0x10);
     for(UDOUBLE i=0; i<Height; i++ )
     {
-        EPD_13IN3E_SendData2(Image2 + i*Width, Width1);
+        EPD_13IN3E_SendData2(Image2 + i*Width1, Width1);
         DEV_Delay_ms(1);
     }
        
