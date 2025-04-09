@@ -1,0 +1,28 @@
+menu "Project Configuration"
+
+    config BROKER_URL
+        string "Broker URL"
+        default "mqtt://mqtt.eclipseprojects.io"
+        help
+            URL of the broker to connect to
+    config BROKER_USERNAME
+        string "Broker Username"
+        default "***REMOVED***"
+        help
+            Username to login to the broker
+    config BROKER_PASSWORD
+        string "Broker Password"
+        default "***REMOVED***"
+        help
+            Password to login to the broker
+    config SSID
+        string "SSID"
+        default "__UNDEFINED__"
+        help
+            Wifi SSID
+    config WIFI_PASSWORD 
+        string "WiFi Password"
+        default "__UNDEFINED__"
+        help
+            Wifi Password
+endmenu
