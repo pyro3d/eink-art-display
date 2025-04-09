@@ -7,12 +7,12 @@ menu "Project Configuration"
             URL of the broker to connect to
     config BROKER_USERNAME
         string "Broker Username"
-        default "***REMOVED***"
+        default "mqtt"
         help
             Username to login to the broker
     config BROKER_PASSWORD
         string "Broker Password"
-        default "***REMOVED***"
+        default "mqtt"
         help
             Password to login to the broker
     config SSID
