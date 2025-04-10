@@ -30,7 +30,7 @@ typedef struct config_struct {
 } config_t;
 
 config_t app_config = {
-    .art_source="chiart",
+    .art_source="artic",
     .oil = true,
     .landscape = true,
     .updated = false
@@ -188,7 +188,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         {
             switch((art_sources_t)strtol(event->data, NULL, 10)) {
                 case RANDOM: app_config.art_source = "random"; break;
-                case ART_INSTITUTE_CHICAGO: app_config.art_source = "chiart"; break;
+                case ART_INSTITUTE_CHICAGO: app_config.art_source = "artic"; break;
                 case NASJONALMUSEET: app_config.art_source = "nasmuseet"; break;
             }
         }
