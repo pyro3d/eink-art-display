@@ -251,7 +251,7 @@ void app_main(void)
         if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
         char url[160] = {};
         printf("URL TO CONSTRUCT: http://art-converter.example.com/image?format=binary&source=%s&oil=%s&landscape=%s", app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
-        sprintf(url,"http://art-converter.example.com/image?format=binary");
+        sprintf(url, "http://art-converter.example.com/image?format=binary&source=%s&oil=%s&landscape=%s", app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
      //   sprintf(url,"http://192.168.88.212:8000/image?format=binary");
         esp_http_client_config_t config = {
             .url = url,
