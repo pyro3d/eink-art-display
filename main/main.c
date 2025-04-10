@@ -36,6 +36,12 @@ config_t app_config = {
     .updated = false
 };
 
+typedef enum {
+    RANDOM,
+    ART_INSTITUTE_CHICAGO,
+    NASJIONALMUSEET
+} art_sources_t;
+
 inline int MIN(int a, int b) { return a > b ? b : a; }
 inline int MAX(int a, int b) { return a > b ? a : b; }
 
@@ -180,9 +186,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         printf("DATA=%.*s\r\n", event->data_len, event->data);
         if (strnstr(event->topic, "art_display/source",event->topic_len))
         {
-            switch(strtol(event->data, NULL, 10)) {
-                case 0: app_config.art_source = "chiart"; break;
-                case 1: app_config.art_source = "nasmuseet"; break;
+            switch((art_sources_t)strtol(event->data, NULL, 10)) {
+                case RANDOM: app_config.art_source = "random"; break;
+                case ART_INSTITUTE_CHICAGO: app_config.art_source = "chiart"; break;
+                case NASJIONALMUSEET: app_config.art_source = "nasmuseet"; break;
             }
         }
         else if(strnstr(event->topic, "art_display/type_oil", event->topic_len)) 
