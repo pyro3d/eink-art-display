@@ -21,8 +21,38 @@
 #define MAX_HTTP_OUTPUT_BUFFER 4000000
 
 
+bool updated_settings = false;
+typedef struct config_struct {
+    char *art_source;
+    bool oil;
+    bool landscape;
+    bool updated;
+} config_t;
+
+config_t app_config = {
+    .art_source="chiart",
+    .oil = true,
+    .landscape = true,
+    .updated = false
+};
+
 inline int MIN(int a, int b) { return a > b ? b : a; }
 inline int MAX(int a, int b) { return a > b ? a : b; }
+
+esp_mqtt_topic_t topics[] = {
+    {
+        .filter = "homeassistant/select/art_display/source/command",
+        .qos = 0
+    },
+    {
+        .filter = "homeassistant/switch/art_display/type_oil/command",
+        .qos = 0
+    },
+    {
+        .filter = "homeassistant/switch/art_display/type_landscape/command",
+        .qos = 0
+     }
+};
 
 EXT_RAM_BSS_ATTR char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
 #define TAG "http"
@@ -148,6 +178,32 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
+        if (strnstr(event->topic, "art_display/source",event->topic_len))
+        {
+            switch(strtol(event->data, NULL, 10)) {
+                case 0: app_config.art_source = "chiart"; break;
+                case 1: app_config.art_source = "nasmuseet"; break;
+            }
+        }
+        else if(strnstr(event->topic, "art_display/type_oil", event->topic_len)) 
+        {
+            if( strnstr(event->data, "OFF" ,event->data_len)) {
+                app_config.oil = false;
+            }
+            else {
+                app_config.oil = true;
+            }
+        }
+        else if(strnstr(event->topic, "type_landscape", event->topic_len)) 
+        {
+            if( strnstr(event->data, "OFF", event->data_len)) {
+                app_config.landscape = false;
+            }
+            else {
+                app_config.landscape = true;
+            }
+        }
+        app_config.updated = true;
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -184,11 +240,17 @@ void app_main(void)
     esp_mqtt_client_register_event(mqtt_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_sleep_enable_ext0_wakeup(21, 1);
     init_spi();
+    ESP_LOGI(TAG, "SPI Init done.");
     while(true) {
         example_connect();
+        app_config.updated = false;
         esp_mqtt_client_start(mqtt_client);
-        ESP_LOGW("main", "SPI Init done.");
+        esp_mqtt_client_subscribe_multiple(mqtt_client, topics, 3);
+        ESP_LOGI(TAG, "Waiting for config to be updated or timeout...");
+        for (int i = 0; (i < 100 && !app_config.updated); i++) vTaskDelay(10/portTICK_PERIOD_MS);
+        if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
         char url[160] = {};
+        printf("URL TO CONSTRUCT: http://art-converter.example.com/image?format=binary&source=%s&oil=%s&landscape=%s", app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
         sprintf(url,"http://art-converter.example.com/image?format=binary");
      //   sprintf(url,"http://192.168.88.212:8000/image?format=binary");
         esp_http_client_config_t config = {
