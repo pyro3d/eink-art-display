@@ -55,7 +55,7 @@ esp_mqtt_topic_t topics[] = {
 };
 
 EXT_RAM_BSS_ATTR char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
-#define TAG "http"
+static char * TAG = "main";
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
     static char *output_buffer;  // Buffer to store response of http request from event handler
