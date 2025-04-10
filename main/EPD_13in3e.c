@@ -65,7 +65,7 @@ void DEV_Delay_ms(int ms) {
 }
 
 void Debug(char * text) {
-    ESP_LOGI("EPD", "%s", text);
+    ESP_LOGI(TAG, "%s", text);
 }
 int DEV_Digital_Read(int pin){
     return  gpio_get_level(pin);

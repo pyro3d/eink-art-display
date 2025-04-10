@@ -16,7 +16,7 @@
 #define MAX_IP6_ADDRS_PER_NETIF (5)
 #define NR_OF_IP_ADDRESSES_TO_WAIT_FOR (s_active_interfaces)
 
-static const char *TAG = "example_connect";
+static const char *TAG = "wifi_connect";
 
 
 static int s_active_interfaces = 0;
