@@ -158,6 +158,7 @@ static esp_netif_t *wifi_start(void)
     esp_netif_config.if_desc = desc;
     esp_netif_config.route_prio = 128;
     esp_netif_t *netif = esp_netif_create_wifi(WIFI_IF_STA, &esp_netif_config);
+    esp_netif_set_hostname(netif, "esp-eink-art-display");
     free(desc);
     esp_wifi_set_default_wifi_sta_handlers();
 
