@@ -25,4 +25,9 @@ menu "Project Configuration"
         default "__UNDEFINED__"
         help
             Wifi Password
+    config ART_CONVERTER_URL
+        string "Art Converter URL"
+        default "http://art-converter.example.com"
+        help
+            URL to reach the art converter proxy service
 endmenu
