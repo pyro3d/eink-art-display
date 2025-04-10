@@ -38,28 +38,6 @@
 static char *TAG = "EPD";
 static spi_device_handle_t spi;
 
-EXT_RAM_BSS_ATTR static UBYTE m_buf[EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4  ] = { 0 };
-EXT_RAM_BSS_ATTR static UBYTE s_buf[EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4  ] = { 0 };
-void copy_cjson_array(cJSON *array, int s_select) {
-    cJSON *item = array ? array->child : 0;
-    int i = 0;
-    char * arr = cJSON_Print(item);
-    free(arr);
-    for (i = 0; item && i < EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4 ; item=item->next, i++) {
-        if (s_select) { 
-            s_buf[i] = item->valueint;
-        }
-        else {
-            m_buf[i] = item->valueint;
-        }
-    }
-    esp_cache_msync(&m_buf, EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH /4, ESP_CACHE_MSYNC_FLAG_DIR_C2M| ESP_CACHE_MSYNC_FLAG_UNALIGNED);
-    esp_cache_msync(&s_buf, EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH /4, ESP_CACHE_MSYNC_FLAG_DIR_C2M  | ESP_CACHE_MSYNC_FLAG_UNALIGNED);
-}
-void copy_to_s(char* src) {
-    memcpy(m_buf, src, EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4  );
-    memcpy(s_buf, src+EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4, EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4  );
-}
 void DEV_Delay_ms(int ms) {
     vTaskDelay(ms/ portTICK_PERIOD_MS);
 }
@@ -474,44 +452,6 @@ void EPD_13IN3E_Display2(const UBYTE *Image1, const UBYTE *Image2)
     
     EPD_13IN3E_TurnOnDisplay();
 }
-void EPD_13IN3E_Display_Buffers()
-{
-    UDOUBLE Width, Width1, Height;
-    Width = (EPD_13IN3E_WIDTH % 2 == 0)? (EPD_13IN3E_WIDTH / 2 ): (EPD_13IN3E_WIDTH / 2 + 1);
-    Width1 = (Width % 2 == 0)? (Width / 2 ): (Width / 2 + 1);
-    Height = EPD_13IN3E_HEIGHT;
-    ESP_LOGW("epd", "First element of s_buf is %d", s_buf[0]) ;
-    ESP_LOGW("epd", "Second element of s_buf is %d", s_buf[1]) ;
-    DEV_Digital_Write(EPD_CS_M_PIN, 0);
-    EPD_13IN3E_SendCommand(0x10);
-    int Color = (6<<4)|6;
-    
-    UBYTE buf[Width/2];
-    
-    for (UDOUBLE j = 0; j < Width/2; j++) {
-        buf[j] = Color;
-    }
-    DEV_Delay_ms(10);
-    for(UDOUBLE i=0; i<Height; i++ )
-    {
-        EPD_13IN3E_SendData2(m_buf + i*Width1, Width1);
-        DEV_Delay_ms(1);
-    }
-    EPD_13IN3E_CS_ALL(1);
-
-    DEV_Digital_Write(EPD_CS_S_PIN, 0);
-    EPD_13IN3E_SendCommand(0x10);
-    for(UDOUBLE i=0; i<Height; i++ )
-    {
-        EPD_13IN3E_SendData2(s_buf + i*Width1, Width1);
-        DEV_Delay_ms(1);
-    }
-       
-    EPD_13IN3E_CS_ALL(1);
-    
-    EPD_13IN3E_TurnOnDisplay();
-}
-
 
 void EPD_13IN3E_DisplayPart(const UBYTE *Image, UWORD xstart, UWORD ystart, UWORD image_width, UWORD image_heigh)
 {
