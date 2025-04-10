@@ -35,7 +35,7 @@
 #include "esp_log.h"
 #include "esp_cache.h"
 
-char *TAG = "EPD Driver";
+static char *TAG = "EPD";
 static spi_device_handle_t spi;
 
 EXT_RAM_BSS_ATTR static UBYTE m_buf[EPD_13IN3E_HEIGHT * EPD_13IN3E_WIDTH / 4  ] = { 0 };
