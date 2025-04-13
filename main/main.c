@@ -164,8 +164,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     case MQTT_EVENT_DATA:
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        printf("DATA=%.*s\r\n", event->data_len, event->data);
         if (strnstr(event->topic, "art_display/source",event->topic_len))
         {
             switch((art_sources_t)strtol(event->data, NULL, 10)) {
@@ -258,15 +256,12 @@ void app_main(void)
         app_config.updated = false;
         esp_mqtt_client_start(mqtt_client);
         esp_mqtt_client_subscribe_multiple(mqtt_client, topics, 4);
-//        esp_mqtt_client_publish(mqtt_client, MQTT_TOPIC_TEMPLATE("switch", "type_oil")"/config", MQTT_CMD_DISCOVERY_TEMPLATE("switch","Oil Paintings Only","type_oil")"}",0,0,0);
-//        esp_mqtt_client_publish(mqtt_client, MQTT_TOPIC_TEMPLATE("switch", "type_landscape")"/config", MQTT_CMD_DISCOVERY_TEMPLATE("switch","Landscape Paintings Only","type_landscape")"}",0,0,0);
         ESP_LOGI(TAG, "Waiting for config to be updated or timeout...");
         for (int i = 0; (i < 100 && !app_config.updated); i++) vTaskDelay(10/portTICK_PERIOD_MS);
         if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
         char url[160] = {};
         ESP_LOGI(TAG,"URL TO CONSTRUCT: %s/image?format=binary&source=%s&oil=%s&landscape=%s\n", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
         sprintf(url, "%s/image?format=binary&source=%s&oil=%s&landscape=%s", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
-     //   sprintf(url,"http://192.168.88.212:8000/image?format=binary");
         esp_http_client_config_t config = {
             .url = url,
             .timeout_ms = 20000,
@@ -286,11 +281,8 @@ void app_main(void)
             char title[200] = {0};
             char art_url[200] = {0};
             char * buf_ptr = local_response_buffer + (EPD_13IN3E_WIDTH * EPD_13IN3E_HEIGHT /  2);
-            printf("Buf location %p\n", buf_ptr);
             buf_ptr = copy_until_null(title, buf_ptr, 200);
-            printf("Buf location %p\n", buf_ptr);
             buf_ptr = copy_until_null(artist, buf_ptr, 200);
-            printf("Buf location %p\n", buf_ptr);
             buf_ptr = copy_until_null(art_url, buf_ptr, 200);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/title/state", title, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/artist/state", artist, 0, 0, 0);
@@ -302,8 +294,6 @@ void app_main(void)
             ESP_LOGW("HTTP", "URL: %s", art_url);
             EPD_13IN3E_Init();
             ESP_LOGW("main", "EPD Init done.");
-          //  EPD_13IN3E_Clear(EPD_13IN3E_RED);
-        //    EPD_13IN3E_Clear(EPD_13IN3E_BLUE);
             EPD_13IN3E_Display2((UBYTE *)local_response_buffer, (UBYTE *)local_response_buffer+(EPD_13IN3E_BUF_WIDTH));
             EPD_13IN3E_Sleep();
             power_off();
