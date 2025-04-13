@@ -59,7 +59,6 @@ void DEV_SPI_WriteByte(UBYTE Data) {
 
 void epaper_spi_pre_transfer_callback(spi_transaction_t *t)
 {
-    int dc = (int)t->user;
     gpio_set_level(EPD_DC_PIN, 0);
 }
 void init_spi() {
