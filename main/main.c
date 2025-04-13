@@ -12,35 +12,11 @@
 #include "esp_event.h"
 #include "esp_sleep.h"
 #include "mqtt_client.h"
+#include "app.h"
 
 #include "connect.h"
 
 #include <cJSON.h>
-
-#define MAX_HTTP_RECV_BUFFER 1024
-#define MAX_HTTP_OUTPUT_BUFFER 4000000
-
-
-bool updated_settings = false;
-typedef struct config_struct {
-    char *art_source;
-    bool oil;
-    bool landscape;
-    bool updated;
-} config_t;
-
-config_t app_config = {
-    .art_source="artic",
-    .oil = true,
-    .landscape = true,
-    .updated = false
-};
-
-typedef enum {
-    RANDOM,
-    ART_INSTITUTE_CHICAGO,
-    NASJONALMUSEET
-} art_sources_t;
 
 inline int MIN(int a, int b) { return a > b ? b : a; }
 inline int MAX(int a, int b) { return a > b ? a : b; }
@@ -59,6 +35,8 @@ esp_mqtt_topic_t topics[] = {
         .qos = 0
      }
 };
+
+
 
 EXT_RAM_BSS_ATTR char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
 static char * TAG = "main";
@@ -245,7 +223,7 @@ void app_main(void)
     };
     esp_mqtt_client_handle_t mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(mqtt_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
-    esp_sleep_enable_ext0_wakeup(21, 1);
+    esp_sleep_enable_ext0_wakeup(WAKEUP_SWITCH_GPIO, 1);
     init_spi();
     ESP_LOGI(TAG, "SPI Init done.");
     while(true) {
