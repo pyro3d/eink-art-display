@@ -15,13 +15,14 @@ typedef struct config_struct {
     bool oil;
     bool landscape;
     bool updated;
+    uint32_t update_interval;
 } config_t;
 
 config_t app_config = {
-    .art_source="artic",
     .oil = true,
     .landscape = true,
-    .updated = false
+    .updated = false,
+    .update_interval = 60
 };
 
 typedef enum {

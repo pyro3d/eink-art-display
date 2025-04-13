@@ -33,6 +33,10 @@ esp_mqtt_topic_t topics[] = {
     {
         .filter = "homeassistant/switch/art_display/type_landscape/command",
         .qos = 0
+     },
+    {
+        .filter = "homeassistant/number/art_display/update_interval/command",
+        .qos = 0
      }
 };
 
@@ -188,6 +192,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 app_config.landscape = true;
             }
         }
+        else if(strnstr(event->topic, "update_interval", event->topic_len)) 
+        {
+            app_config.update_interval = strtol(event->data, NULL, 10);
+        }
         app_config.updated = true;
         break;
     case MQTT_EVENT_ERROR:
@@ -209,9 +217,28 @@ void app_main(void)
 {
     // System initialization
     ESP_ERROR_CHECK(nvs_flash_init());
+        // Initialize NVS
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( err );
+    nvs_handle_t nvs_handle;
+    ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-
+    size_t art_source_size = 0;
+    err = nvs_get_str(nvs_handle, "art_source", app_config.art_source, art_source_size);
+    if (err == ESP_ERR_NVS_NOT_FOUND ) ESP_LOGW(TAG, "%s not in config", "art_source");
+    err = nvs_get_u8(nvs_handle, "oil", (uint8_t*)(&app_config.oil));
+    if (err == ESP_ERR_NVS_NOT_FOUND ) ESP_LOGW(TAG, "%s not in config", "oil");
+    err = nvs_get_u8(nvs_handle, "landscape", (uint8_t*)(&app_config.landscape));
+    if (err == ESP_ERR_NVS_NOT_FOUND ) ESP_LOGW(TAG, "%s not in config", "landscape");
+    err = nvs_get_u32(nvs_handle, "update_interval", &app_config.update_interval);
+    if (err == ESP_ERR_NVS_NOT_FOUND ) ESP_LOGW(TAG, "%s not in config", "update_interval");
     esp_mqtt_client_config_t mqtt_cfg = {
         .broker.address.uri = CONFIG_BROKER_URL,
         .credentials = {
@@ -230,7 +257,9 @@ void app_main(void)
         example_connect();
         app_config.updated = false;
         esp_mqtt_client_start(mqtt_client);
-        esp_mqtt_client_subscribe_multiple(mqtt_client, topics, 3);
+        esp_mqtt_client_subscribe_multiple(mqtt_client, topics, 4);
+//        esp_mqtt_client_publish(mqtt_client, MQTT_TOPIC_TEMPLATE("switch", "type_oil")"/config", MQTT_CMD_DISCOVERY_TEMPLATE("switch","Oil Paintings Only","type_oil")"}",0,0,0);
+//        esp_mqtt_client_publish(mqtt_client, MQTT_TOPIC_TEMPLATE("switch", "type_landscape")"/config", MQTT_CMD_DISCOVERY_TEMPLATE("switch","Landscape Paintings Only","type_landscape")"}",0,0,0);
         ESP_LOGI(TAG, "Waiting for config to be updated or timeout...");
         for (int i = 0; (i < 100 && !app_config.updated); i++) vTaskDelay(10/portTICK_PERIOD_MS);
         if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
@@ -279,8 +308,11 @@ void app_main(void)
             EPD_13IN3E_Sleep();
             power_off();
         }
+        nvs_set_str(nvs_handle, "art_source", app_config.art_source);
+        nvs_set_u8(nvs_handle, "oil", (uint8_t)(app_config.oil));
+        nvs_set_u8(nvs_handle, "landscape", (uint8_t)(app_config.landscape));
+        nvs_set_u32(nvs_handle, "update_interval", app_config.update_interval);
         esp_http_client_cleanup(client);
-//        vTaskDelay(360000 /portTICK_PERIOD_MS);
-        esp_deep_sleep_try(3600000000);
+        esp_deep_sleep_try(app_config.update_interval * 60 * 1000000);
     }
 }
