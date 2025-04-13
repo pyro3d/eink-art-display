@@ -280,20 +280,24 @@ void app_main(void)
             char artist[200] = {0};
             char title[200] = {0};
             char art_url[200] = {0};
+            char art_source[200] = {0};
             char * buf_ptr = local_response_buffer + (EPD_13IN3E_WIDTH * EPD_13IN3E_HEIGHT /  2);
             buf_ptr = copy_until_null(title, buf_ptr, 200);
             buf_ptr = copy_until_null(artist, buf_ptr, 200);
             buf_ptr = copy_until_null(art_url, buf_ptr, 200);
+            buf_ptr = copy_until_null(art_source, buf_ptr, 200);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/title/state", title, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/artist/state", artist, 0, 0, 0);
+            esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/used_source/state", art_source, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/image/art_display/image/url", art_url, 0, 0, 0);
             power_on();
             esp_mqtt_client_stop(mqtt_client);
             example_disconnect();
-            ESP_LOGW("HTTP", "Artist: %s Title: %s", artist, title);
-            ESP_LOGW("HTTP", "URL: %s", art_url);
+            ESP_LOGI("HTTP", "Artist: %s Title: %s", artist, title);
+            ESP_LOGI("HTTP", "Source: %s", art_source);
+            ESP_LOGI("HTTP", "URL: %s", art_url);
             EPD_13IN3E_Init();
-            ESP_LOGW("main", "EPD Init done.");
+            ESP_LOGI("main", "EPD Init done.");
             EPD_13IN3E_Display2((UBYTE *)local_response_buffer, (UBYTE *)local_response_buffer+(EPD_13IN3E_BUF_WIDTH));
             EPD_13IN3E_Sleep();
             power_off();
@@ -303,6 +307,7 @@ void app_main(void)
         nvs_set_u8(nvs_handle, "landscape", (uint8_t)(app_config.landscape));
         nvs_set_u32(nvs_handle, "update_interval", app_config.update_interval);
         esp_http_client_cleanup(client);
+        ESP_LOGI(TAG, "Sleeping for %ld minutes", app_config.update_interval);
         esp_deep_sleep_try(app_config.update_interval * 60 * 1000000);
     }
 }
