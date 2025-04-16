@@ -256,8 +256,8 @@ void app_main(void)
         for (int i = 0; (i < 100 && !app_config.updated); i++) vTaskDelay(10/portTICK_PERIOD_MS);
         if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
         char url[160] = {};
-        ESP_LOGI(TAG,"URL TO CONSTRUCT: %s/image?format=binary&source=%s&oil=%s&landscape=%s\n", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
-        sprintf(url, "%s/image?format=binary&source=%s&oil=%s&landscape=%s", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
+        sprintf(url, "%s/image?format=binary&source=%s&oil=%s&landscape=%s&display=epd133e", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
+        ESP_LOGI(TAG,"Using URL %s", url);
         esp_http_client_config_t config = {
             .url = url,
             .timeout_ms = 20000,
@@ -269,7 +269,7 @@ void app_main(void)
         esp_http_client_handle_t client = esp_http_client_init(&config);
         esp_err_t err = esp_http_client_perform(client);
         if (err != ESP_OK) {
-            ESP_LOGE("weather", "Weather data lookup failed!");
+            ESP_LOGE(TAG, "Could not contact art service!!!");
             example_disconnect();
         }
         else {
