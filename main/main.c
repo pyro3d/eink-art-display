@@ -166,11 +166,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         if (strnstr(event->topic, "art_display/source",event->topic_len))
         {
-            switch((art_sources_t)strtol(event->data, NULL, 10)) {
-                case RANDOM: app_config.art_source = "random"; break;
-                case ART_INSTITUTE_CHICAGO: app_config.art_source = "artic"; break;
-                case NASJONALMUSEET: app_config.art_source = "nasmuseet"; break;
-            }
+            strncpy(app_config.art_source, event->data, event->data_len);
         }
         else if(strnstr(event->topic, "art_display/type_oil", event->topic_len)) 
         {

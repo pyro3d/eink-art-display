@@ -11,7 +11,7 @@
 
 bool updated_settings = false;
 typedef struct config_struct {
-    char *art_source;
+    char art_source[20];
     bool oil;
     bool landscape;
     bool updated;
@@ -19,14 +19,9 @@ typedef struct config_struct {
 } config_t;
 
 config_t app_config = {
+    .art_source = {},
     .oil = true,
     .landscape = true,
     .updated = false,
     .update_interval = 60
 };
-
-typedef enum {
-    RANDOM,
-    ART_INSTITUTE_CHICAGO,
-    NASJONALMUSEET
-} art_sources_t;
