@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_err.h"
-#include "EPD_13in3e.h"
 #include "esp_http_client.h"
 #include "esp_tls.h"
 #include "esp_tls.h"
@@ -13,7 +12,9 @@
 #include "esp_sleep.h"
 #include "mqtt_client.h"
 #include "app.h"
-
+#if CONFIG_EPD_133INE
+#include "EPD_13in3e.h"
+#endif
 #include "connect.h"
 
 #include <cJSON.h>
@@ -21,26 +22,18 @@
 inline int MIN(int a, int b) { return a > b ? b : a; }
 inline int MAX(int a, int b) { return a > b ? a : b; }
 
-esp_mqtt_topic_t topics[] = {
-    {
-        .filter = "homeassistant/select/art_display/source/command",
-        .qos = 0
-    },
-    {
-        .filter = "homeassistant/switch/art_display/type_oil/command",
-        .qos = 0
-    },
-    {
-        .filter = "homeassistant/switch/art_display/type_landscape/command",
-        .qos = 0
-     },
-    {
-        .filter = "homeassistant/number/art_display/update_interval/command",
-        .qos = 0
-     }
-};
 
+void EPD_Display(UBYTE * buffer) {
+    #if CONFIG_EPD_133INE
+    power_on();
+    EPD_13IN3E_Init();
+    ESP_LOGI("main", "EPD Init done.");
+    EPD_13IN3E_Display2((UBYTE *)buffer, (UBYTE *)buffer+(EPD_13IN3E_BUF_WIDTH));
+    EPD_13IN3E_Sleep();
+    power_off();
+    #endif
 
+}
 
 EXT_RAM_BSS_ATTR char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER + 1] = {0};
 static char * TAG = "main";
@@ -163,7 +156,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
     case MQTT_EVENT_DATA:
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+        ESP_LOGI(TAG, "MQTT_EVENT_DATA on %.*s",event->topic_len, event->topic);
         if (strnstr(event->topic, "art_display/source",event->topic_len))
         {
             strncpy(app_config.art_source, event->data, event->data_len);
@@ -256,7 +249,11 @@ void app_main(void)
         for (int i = 0; (i < 100 && !app_config.updated); i++) vTaskDelay(10/portTICK_PERIOD_MS);
         if (!app_config.updated) ESP_LOGW(TAG, "Could not update config via MQTT!!!");
         char url[160] = {};
-        sprintf(url, "%s/image?format=binary&source=%s&oil=%s&landscape=%s&display=epd133e", CONFIG_ART_CONVERTER_URL, app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false");
+
+        sprintf(url, "%s/image?format=binary&source=%s&oil=%s&landscape=%s&display=%s", CONFIG_ART_CONVERTER_URL, 
+            app_config.art_source, app_config.oil ? "true" : "false", app_config.landscape ? "true": "false",
+            DISPLAY_API_STRING);
+
         ESP_LOGI(TAG,"Using URL %s", url);
         esp_http_client_config_t config = {
             .url = url,
@@ -286,17 +283,12 @@ void app_main(void)
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/artist/state", artist, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/used_source/state", art_source, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/image/art_display/image/url", art_url, 0, 0, 0);
-            power_on();
             esp_mqtt_client_stop(mqtt_client);
             example_disconnect();
+            EPD_Display((uint8_t *)local_response_buffer);
             ESP_LOGI("HTTP", "Artist: %s Title: %s", artist, title);
             ESP_LOGI("HTTP", "Source: %s", art_source);
             ESP_LOGI("HTTP", "URL: %s", art_url);
-            EPD_13IN3E_Init();
-            ESP_LOGI("main", "EPD Init done.");
-            EPD_13IN3E_Display2((UBYTE *)local_response_buffer, (UBYTE *)local_response_buffer+(EPD_13IN3E_BUF_WIDTH));
-            EPD_13IN3E_Sleep();
-            power_off();
         }
         nvs_set_str(nvs_handle, "art_source", app_config.art_source);
         nvs_set_u8(nvs_handle, "oil", (uint8_t)(app_config.oil));

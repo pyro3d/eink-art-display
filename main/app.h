@@ -25,3 +25,22 @@ config_t app_config = {
     .updated = false,
     .update_interval = 60
 };
+
+esp_mqtt_topic_t topics[] = {
+    {
+        .filter = "homeassistant/select/art_display/source/command",
+        .qos = 0
+    },
+    {
+        .filter = "homeassistant/switch/art_display/type_oil/command",
+        .qos = 0
+    },
+    {
+        .filter = "homeassistant/switch/art_display/type_landscape/command",
+        .qos = 0
+     },
+    {
+        .filter = "homeassistant/number/art_display/update_interval/command",
+        .qos = 0
+     }
+};

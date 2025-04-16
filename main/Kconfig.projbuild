@@ -30,4 +30,10 @@ menu "Project Configuration"
         default "http://art-converter.example.com"
         help
             URL to reach the art converter proxy service
+    choice EINK_TYPE
+        prompt "eInk Display"
+        config EPD_133INE
+            bool "Waveshare 13.3 inch Spectra-6 (13.in3e)"
+
+    endchoice
 endmenu

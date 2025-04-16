@@ -49,6 +49,7 @@
 #define EPD_BUSY_PIN    7
 #define EPD_PWR_PIN     8
 
+
 // M/S 控制区域 600*1600
 #define EPD_13IN3E_WIDTH        1200
 #define EPD_13IN3E_HEIGHT       1600    
@@ -83,6 +84,7 @@
 #define PWS             0xE3
 #define CMD66           0xF0
 
+#define DISPLAY_API_STRING "epd133ine"
 
 
 
