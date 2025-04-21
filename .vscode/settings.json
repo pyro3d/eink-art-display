@@ -1,5 +1,11 @@
 {
-    "idf.port": "/dev/ttyACM3",
+    "idf.port": "/dev/ttyACM2",
     "idf.pythonInstallPath": "/usr/bin/python3",
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "files.associations": {
+        "*.c": "c",
+        "clk_tree_defs.h": "c"
+    },
+    "idf.monitorNoReset": true,
+    "idf.monitorEnableTimestamps": true
 }
