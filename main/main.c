@@ -12,6 +12,8 @@
 #include "esp_sleep.h"
 #include "mqtt_client.h"
 #include "app.h"
+#include "esp_adc/adc_oneshot.h"
+#include "soc/clk_tree_defs.h"
 #if CONFIG_EPD_133INE
 #include "EPD_13in3e.h"
 #endif
@@ -212,6 +214,23 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
+    adc_unit_t batt_voltage_unit;
+    adc_channel_t batt_voltage_channel;
+    adc_oneshot_io_to_channel(BATT_VOLTAGE_GPIO, &batt_voltage_unit, &batt_voltage_channel);
+    ESP_LOGW("temp", "ADC Unit is %d, ADC Channel is %d", batt_voltage_unit, batt_voltage_channel);
+    adc_oneshot_unit_handle_t batt_voltage_handle;
+    adc_oneshot_unit_init_cfg_t batt_voltage_handle_cfg;
+    batt_voltage_handle_cfg.unit_id = batt_voltage_unit;
+    batt_voltage_handle_cfg.clk_src =  ADC_DIGI_CLK_SRC_DEFAULT;
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&batt_voltage_handle_cfg, &batt_voltage_handle));
+    adc_oneshot_chan_cfg_t config = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten = ADC_ATTEN_DB_0,
+    };
+    int voltage;
+    ESP_ERROR_CHECK(adc_oneshot_read(batt_voltage_handle, batt_voltage_channel, &voltage));
+    float battery_voltage = ((float)voltage) * (4.2/4095);
+    ESP_LOGW("temp", "Voltage Read? %d %f", voltage, battery_voltage);
     ESP_ERROR_CHECK( err );
     nvs_handle_t nvs_handle;
     ESP_ERROR_CHECK(nvs_open("storage", NVS_READWRITE, &nvs_handle));
@@ -283,6 +302,10 @@ void app_main(void)
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/artist/state", artist, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/used_source/state", art_source, 0, 0, 0);
             esp_mqtt_client_publish(mqtt_client,"homeassistant/image/art_display/image/url", art_url, 0, 0, 0);
+            char battery_level_str[20] = {};
+            sprintf(battery_level_str, "%d", (int)((battery_voltage-3.3)/(4.2-3.3)*100));
+            printf("Battery Level = %f, String = %s\n", (battery_voltage-3.3)/(4.2-3.3)*100, battery_level_str);
+            esp_mqtt_client_publish(mqtt_client,"homeassistant/sensor/art_display/battery/state", battery_level_str, 0, 0, 0);
             esp_mqtt_client_stop(mqtt_client);
             example_disconnect();
             EPD_Display((uint8_t *)local_response_buffer);

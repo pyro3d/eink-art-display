@@ -8,6 +8,8 @@
 #define MQTT_CMD_DISCOVERY_TEMPLATE(Type, Name, UID) "{\"name\": \""Name"\", \"command_topic\": \"homeassistant/"Type"/art_display/"UID"/command\",\"optimistic\": true, \"unique_id\": art_"UID"\","DEVICE_SETTINGS_STR
 
 #define WAKEUP_SWITCH_GPIO 21
+#define BATT_VOLTAGE_GPIO 10
+
 
 bool updated_settings = false;
 typedef struct config_struct {
